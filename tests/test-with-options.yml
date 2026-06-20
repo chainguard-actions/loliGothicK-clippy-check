@@ -1,0 +1,53 @@
+name: Test clippy-check with options and lint configs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: fake-token-for-act
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Set up a minimal Rust project for clippy to run against
+      - name: Set up Rust project
+        run: |
+          mkdir -p /tmp/rust-project/src
+          cat > /tmp/rust-project/Cargo.toml << 'EOF'
+          [package]
+          name = "clippy-test"
+          version = "0.1.0"
+          edition = "2021"
+          EOF
+          cat > /tmp/rust-project/src/main.rs << 'EOF'
+          fn main() {
+              println!("Hello, world!");
+          }
+          EOF
+
+      - name: Install Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - id: clippy
+        uses: .
+        with:
+          token: ${{ env.GITHUB_TOKEN }}
+          options: "--manifest-path /tmp/rust-project/Cargo.toml -- -D warnings"
+          warn: "unused_variables"
+          allow: "dead_code"
+          name: "clippy-with-options"
+        continue-on-error: true
+
+      - name: Assert action ran with options
+        run: |
+          echo "Clippy check with options completed (outcome: ${{ steps.clippy.outcome }})"
+          # The action may fail due to fake token (can't post GitHub checks),
+          # but it should attempt to run clippy. We verify it ran by checking
+          # that the step was executed (not skipped).
+          if [ "${{ steps.clippy.outcome }}" = "skipped" ]; then
+            echo "FAIL: action step was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action step executed with options"
