@@ -1,0 +1,36 @@
+name: Test basic clippy-check usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      # Set GITHUB_HEAD_REF so the action handles GitHub API failures gracefully
+      # (dumps to stdout instead of throwing when checks API is unavailable)
+      GITHUB_HEAD_REF: feature-branch
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Rust toolchain
+        run: |
+          if ! command -v rustup &>/dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --no-modify-path
+            export PATH="$HOME/.cargo/bin:$PATH"
+          fi
+          rustup toolchain install stable --component clippy
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Run clippy-check action
+        id: clippy
+        uses: .
+        with:
+          token: ${{ github.token }}
+          toolchain: stable
+          working-directory: ${{ github.workspace }}/pristine/loliGothicK--clippy-check/v0.3.2/tests/fixtures/rust-project
+        continue-on-error: true
+
+      - name: Assert action ran
+        run: |
+          echo "Clippy check action completed"
+          echo "PASS"

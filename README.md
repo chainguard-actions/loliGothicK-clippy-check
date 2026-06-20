@@ -1,15 +1,41 @@
-# loliGothicK/clippy-check
+# Rust clippy-check Action
 
-Run clippy and annotate the diff with errors and warnings
+## Example workflow
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/loliGothicK/clippy-check](https://github.com/loliGothicK/clippy-check).
+```yml
+clippy:
+    name: clippy check
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v2
+        - uses: actions-rs/toolchain@v1
+          with:
+              toolchain: nightly
+              components: clippy
+              override: true
+        - uses: LoliGothick/clippy-check@master
+          with:
+              token: ${{ secrets.GITHUB_TOKEN }}
+              allow: >
+                nonstandard_macro_braces
+                mutex_atomic
+              deny: warnings
+```
 
-## Versions
+## Inputs
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v0.2.10 | [`v0.2.10`](https://github.com/chainguard-actions/loliGothicK-clippy-check/tree/v0.2.10) | [`03b8510`](https://github.com/loliGothicK/clippy-check/commit/03b8510454c0563e64d91f6e481ab97372bf7ed8) |
-| v0.2.11 | [`v0.2.11`](https://github.com/chainguard-actions/loliGothicK-clippy-check/tree/v0.2.11) | [`9cd01de`](https://github.com/loliGothicK/clippy-check/commit/9cd01de4387f9c644b6489355bcff686da6a00f2) |
+|       Name        | Required | Description                                                                                                                             |  Type  |         Default         |
+|:-----------------:|:--------:|:----------------------------------------------------------------------------------------------------------------------------------------| :----: |:-----------------------:|
+|       token       |    ✔     | GitHub secret token, usually a `${{ secrets.GITHUB_TOKEN }}`.                                                                           | string |                         |
+|     toolchain     |          | Rust toolchain to use .                                                                                                                 | string |         stable          |
+|      target       |          | Target to run clippy on.                                                                                                                | string |                         |
+|      options      |          | Options for the `cargo calippy` command.<br>`--message-format=json` is set by default.<br>Given `--message-format` is omitted silently. | string | `--message-format=json` |
+|       warn        |          | Sequence for lint warnings (without `clippy::`).                                                                                        | string |                         |
+|       allow       |          | Sequence for lint allowed (without `clippy::`).                                                                                         | string |                         |
+|       deny        |          | Sequence for lint denied (without `clippy::`).                                                                                          | string |                         |
+|      forbid       |          | Sequence for lint forbidden (without `clippy::`).                                                                                       | string |                         |
+|       name        |          | Name of the created GitHub check. If running this action multiple times, each run must have a unique name.                              | string |         clippy          |
+| working-directory |          | The working directory in which `carg fmt` is executed.                                                                                  | string |            .            |
 
 ## Privacy
 
