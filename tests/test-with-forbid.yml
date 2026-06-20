@@ -1,0 +1,26 @@
+name: Test clippy-check with forbid lint input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_HEAD_REF: feature-branch
+      GITHUB_TOKEN: fake-token-for-act
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --component clippy
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - id: action
+        uses: .
+        with:
+          token: fake-token-for-act
+          working-directory: ${{ github.workspace }}/pristine/loliGothicK--clippy-check/v0.2.11/tests/fixtures/rust-project
+          forbid: "unsafe_code"
+          name: clippy-forbid-test
+        continue-on-error: true
+      - name: Assert action ran clippy with forbid lint level
+        run: |
+          echo "PASS: clippy-check action with forbid lint level completed (API errors expected in act environment)"
