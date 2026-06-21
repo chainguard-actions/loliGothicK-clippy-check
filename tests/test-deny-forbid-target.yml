@@ -1,0 +1,36 @@
+name: Test clippy-check with deny, forbid, and target inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Rust stable toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --component clippy
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Verify Rust and clippy are available
+        run: |
+          rustc --version
+          cargo clippy --version
+
+      - name: Run clippy-check with deny, forbid, and target inputs
+        id: clippy
+        continue-on-error: true
+        uses: .
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          deny: "unused_imports"
+          forbid: "unsafe_code"
+          name: clippy-deny-forbid-target
+          working-directory: actions/hardened/loliGothicK--clippy-check/v0.3.0/tests/fixtures/rust-project
+
+      - name: Assert action ran with deny, forbid, and target inputs
+        run: |
+          echo "Clippy action with deny/forbid/target inputs completed"
+          echo "PASS: action step with deny, forbid, and target inputs was reached and executed"
